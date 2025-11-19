@@ -96,14 +96,15 @@
         reloadBtn.disabled = true;
         statusEl.textContent = "APIから取得中...";
 
-        const response = await fetch("https://api.quotable.io/random");
+        // Quotable ではなく DummyJSON のランダム名言APIを使用
+        const response = await fetch("https://dummyjson.com/quotes/random");
         const data = await response.json();
 
         if (!response.ok) {
           throw new Error("APIエラー");
         }
 
-        quoteEl.textContent = data.content;
+        quoteEl.textContent = data.quote;
         authorEl.textContent = data.author ? "by " + data.author : "";
         statusEl.textContent = "取得完了";
       } catch (err) {
@@ -124,4 +125,3 @@
   </script>
 </body>
 </html>
-
