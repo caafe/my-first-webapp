@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <title>ランダム名言アプリ</title>
+  <title>ランダム名言アプリ（英語＋日本語訳）</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     body {
@@ -17,7 +17,7 @@
     }
     .card {
       background: #ffffff;
-      max-width: 600px;
+      max-width: 640px;
       width: 90%;
       padding: 24px 28px;
       border-radius: 8px;
@@ -35,12 +35,19 @@
       border-left: 4px solid #0070f3;
       color: #222222;
     }
-    blockquote p {
+    .quote-en {
       margin: 0 0 8px;
       line-height: 1.6;
       font-size: 16px;
     }
+    .quote-ja {
+      margin: 0;
+      line-height: 1.6;
+      font-size: 15px;
+      color: #444444;
+    }
     blockquote footer {
+      margin-top: 8px;
       font-size: 14px;
       color: #666666;
     }
@@ -68,13 +75,24 @@
       font-size: 12px;
       color: #999999;
     }
+    .label-en {
+      font-size: 12px;
+      color: #888888;
+    }
+    .label-ja {
+      font-size: 12px;
+      color: #888888;
+    }
   </style>
 </head>
 <body>
   <main class="card">
     <h1 class="title">ランダム名言アプリ</h1>
     <blockquote>
-      <p id="quote">読み込み中です...</p>
+      <p class="label-en">原文（English）</p>
+      <p id="quoteEn" class="quote-en">読み込み中です...</p>
+      <p class="label-ja">日本語訳</p>
+      <p id="quoteJa" class="quote-ja"></p>
       <footer>
         <cite id="author"></cite>
       </footer>
@@ -86,30 +104,64 @@
   </main>
 
   <script>
-    const quoteEl = document.getElementById("quote");
+    const quoteEnEl = document.getElementById("quoteEn");
+    const quoteJaEl = document.getElementById("quoteJa");
     const authorEl = document.getElementById("author");
     const statusEl = document.getElementById("status");
     const reloadBtn = document.getElementById("reloadBtn");
 
+    async function translateToJapanese(text) {
+      try {
+        // LibreTranslate 公開インスタンスを利用（学習用途向け）
+        const res = await fetch("https://libretranslate.de/translate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            q: text,
+            source: "en",
+            target: "ja",
+            format: "text"
+          })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || data.error) {
+          throw new Error(data.error || "Translate API error");
+        }
+
+        quoteJaEl.textContent = data.translatedText;
+      } catch (err) {
+        console.error(err);
+        quoteJaEl.textContent = "翻訳に失敗しました。時間をおいて再度お試しください。";
+      }
+    }
+
     async function fetchQuote() {
       try {
         reloadBtn.disabled = true;
-        statusEl.textContent = "APIから取得中...";
+        statusEl.textContent = "英語名言取得中...";
+        quoteJaEl.textContent = "";
 
-        // Quotable ではなく DummyJSON のランダム名言APIを使用
+        // 英語のランダム名言（DummyJSON）
         const response = await fetch("https://dummyjson.com/quotes/random");
         const data = await response.json();
 
         if (!response.ok) {
-          throw new Error("APIエラー");
+          throw new Error("Quote API error");
         }
 
-        quoteEl.textContent = data.quote;
+        quoteEnEl.textContent = data.quote;
         authorEl.textContent = data.author ? "by " + data.author : "";
+
+        // 英語取得ができたら日本語訳を取得
+        statusEl.textContent = "日本語に翻訳中...";
+        await translateToJapanese(data.quote);
         statusEl.textContent = "取得完了";
       } catch (err) {
         console.error(err);
-        quoteEl.textContent = "名言の取得に失敗しました。時間をおいて再度お試しください。";
+        quoteEnEl.textContent = "名言の取得に失敗しました。時間をおいて再度お試しください。";
+        quoteJaEl.textContent = "";
         authorEl.textContent = "";
         statusEl.textContent = "エラー";
       } finally {
