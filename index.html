@@ -75,13 +75,11 @@
       font-size: 12px;
       color: #999999;
     }
-    .label-en {
-      font-size: 12px;
-      color: #888888;
-    }
+    .label-en,
     .label-ja {
       font-size: 12px;
       color: #888888;
+      margin: 0 0 2px;
     }
   </style>
 </head>
@@ -112,28 +110,25 @@
 
     async function translateToJapanese(text) {
       try {
-        // LibreTranslate 公開インスタンスを利用（学習用途向け）
-        const res = await fetch("https://libretranslate.de/translate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            q: text,
-            source: "en",
-            target: "ja",
-            format: "text"
-          })
-        });
+        // MyMemory API (英文 → 和文)
+        const url =
+          "https://api.mymemory.translated.net/get?q=" +
+          encodeURIComponent(text) +
+          "&langpair=en|ja";
 
+        const res = await fetch(url);
         const data = await res.json();
 
-        if (!res.ok || data.error) {
-          throw new Error(data.error || "Translate API error");
+        if (!res.ok || !data.responseData) {
+          throw new Error("Translate API error");
         }
 
-        quoteJaEl.textContent = data.translatedText;
+        const jp = data.responseData.translatedText || "翻訳に失敗しました。";
+        quoteJaEl.textContent = jp;
       } catch (err) {
         console.error(err);
-        quoteJaEl.textContent = "翻訳に失敗しました。時間をおいて再度お試しください。";
+        quoteJaEl.textContent =
+          "翻訳に失敗しました。時間をおいて再度お試しください。";
       }
     }
 
@@ -154,13 +149,14 @@
         quoteEnEl.textContent = data.quote;
         authorEl.textContent = data.author ? "by " + data.author : "";
 
-        // 英語取得ができたら日本語訳を取得
+        // 英文取得できたら日本語訳
         statusEl.textContent = "日本語に翻訳中...";
         await translateToJapanese(data.quote);
         statusEl.textContent = "取得完了";
       } catch (err) {
         console.error(err);
-        quoteEnEl.textContent = "名言の取得に失敗しました。時間をおいて再度お試しください。";
+        quoteEnEl.textContent =
+          "名言の取得に失敗しました。時間をおいて再度お試しください。";
         quoteJaEl.textContent = "";
         authorEl.textContent = "";
         statusEl.textContent = "エラー";
