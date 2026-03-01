@@ -57,6 +57,7 @@
       justify-content: flex-end;
       align-items: center;
       margin-top: 8px;
+      flex-wrap: wrap;
     }
     button {
       border: none;
@@ -74,12 +75,35 @@
     .status {
       font-size: 12px;
       color: #999999;
+      margin-right: auto;
     }
     .label-en,
     .label-ja {
       font-size: 12px;
       color: #888888;
       margin: 0 0 2px;
+    }
+    .saved-section {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid #e6e6e6;
+    }
+    .saved-title {
+      margin: 0 0 8px;
+      font-size: 14px;
+      color: #333333;
+    }
+    .saved-list {
+      margin: 0;
+      padding-left: 18px;
+      color: #333333;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .saved-empty {
+      margin: 0;
+      color: #777777;
+      font-size: 13px;
     }
   </style>
 </head>
@@ -97,8 +121,14 @@
     </blockquote>
     <div class="buttons">
       <span class="status" id="status"></span>
+      <button id="saveBtn">この名言を保存</button>
       <button id="reloadBtn">新しい名言</button>
     </div>
+    <section class="saved-section">
+      <h2 class="saved-title">保存した名言</h2>
+      <p id="savedEmpty" class="saved-empty">まだ保存されていません。</p>
+      <ol id="savedList" class="saved-list"></ol>
+    </section>
   </main>
 
   <script>
@@ -107,6 +137,66 @@
     const authorEl = document.getElementById("author");
     const statusEl = document.getElementById("status");
     const reloadBtn = document.getElementById("reloadBtn");
+    const saveBtn = document.getElementById("saveBtn");
+    const savedListEl = document.getElementById("savedList");
+    const savedEmptyEl = document.getElementById("savedEmpty");
+
+    const SAVED_QUOTES_KEY = "savedQuotes";
+    let currentQuote = null;
+
+    function loadSavedQuotes() {
+      try {
+        const raw = localStorage.getItem(SAVED_QUOTES_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch (err) {
+        console.error(err);
+        return [];
+      }
+    }
+
+    function persistSavedQuotes(quotes) {
+      localStorage.setItem(SAVED_QUOTES_KEY, JSON.stringify(quotes));
+    }
+
+    function renderSavedQuotes() {
+      const savedQuotes = loadSavedQuotes();
+      savedListEl.innerHTML = "";
+
+      if (savedQuotes.length === 0) {
+        savedEmptyEl.style.display = "block";
+        return;
+      }
+
+      savedEmptyEl.style.display = "none";
+
+      savedQuotes.forEach((item) => {
+        const li = document.createElement("li");
+        li.textContent = `「${item.quoteJa || item.quoteEn}」 - ${item.author || "Unknown"}`;
+        savedListEl.appendChild(li);
+      });
+    }
+
+    function saveCurrentQuote() {
+      if (!currentQuote || !currentQuote.quoteEn) {
+        statusEl.textContent = "保存できる名言がありません";
+        return;
+      }
+
+      const savedQuotes = loadSavedQuotes();
+      const isDuplicate = savedQuotes.some(
+        (item) => item.quoteEn === currentQuote.quoteEn && item.author === currentQuote.author
+      );
+
+      if (isDuplicate) {
+        statusEl.textContent = "この名言はすでに保存済みです";
+        return;
+      }
+
+      savedQuotes.unshift(currentQuote);
+      persistSavedQuotes(savedQuotes);
+      renderSavedQuotes();
+      statusEl.textContent = "保存しました";
+    }
 
     async function translateToJapanese(text) {
       try {
@@ -125,10 +215,12 @@
 
         const jp = data.responseData.translatedText || "翻訳に失敗しました。";
         quoteJaEl.textContent = jp;
+        return jp;
       } catch (err) {
         console.error(err);
         quoteJaEl.textContent =
           "翻訳に失敗しました。時間をおいて再度お試しください。";
+        return "";
       }
     }
 
@@ -151,7 +243,12 @@
 
         // 英文取得できたら日本語訳
         statusEl.textContent = "日本語に翻訳中...";
-        await translateToJapanese(data.quote);
+        const quoteJa = await translateToJapanese(data.quote);
+        currentQuote = {
+          quoteEn: data.quote,
+          quoteJa,
+          author: data.author || ""
+        };
         statusEl.textContent = "取得完了";
       } catch (err) {
         console.error(err);
@@ -166,10 +263,12 @@
     }
 
     // 初回表示
+    renderSavedQuotes();
     fetchQuote();
 
     // ボタンクリック時
     reloadBtn.addEventListener("click", fetchQuote);
+    saveBtn.addEventListener("click", saveCurrentQuote);
   </script>
 </body>
 </html>
