@@ -1,175 +1,300 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8" />
-  <title>ランダム名言アプリ（英語＋日本語訳）</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      margin: 0;
-      padding: 0;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #f5f5f5;
-    }
-    .card {
-      background: #ffffff;
-      max-width: 640px;
-      width: 90%;
-      padding: 24px 28px;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    }
-    .title {
-      margin: 0 0 12px;
-      font-size: 20px;
-      font-weight: 600;
-      color: #333333;
-    }
-    blockquote {
-      margin: 0 0 16px;
-      padding-left: 12px;
-      border-left: 4px solid #0070f3;
-      color: #222222;
-    }
-    .quote-en {
-      margin: 0 0 8px;
-      line-height: 1.6;
-      font-size: 16px;
-    }
-    .quote-ja {
-      margin: 0;
-      line-height: 1.6;
-      font-size: 15px;
-      color: #444444;
-    }
-    blockquote footer {
-      margin-top: 8px;
-      font-size: 14px;
-      color: #666666;
-    }
-    .buttons {
-      display: flex;
-      gap: 8px;
-      justify-content: flex-end;
-      align-items: center;
-      margin-top: 8px;
-    }
-    button {
-      border: none;
-      border-radius: 4px;
-      padding: 8px 16px;
-      font-size: 14px;
-      cursor: pointer;
-      background: #0070f3;
-      color: #ffffff;
-    }
-    button:disabled {
-      opacity: 0.6;
-      cursor: default;
-    }
-    .status {
-      font-size: 12px;
-      color: #999999;
-    }
-    .label-en,
-    .label-ja {
-      font-size: 12px;
-      color: #888888;
-      margin: 0 0 2px;
-    }
-  </style>
-</head>
-<body>
-  <main class="card">
-    <h1 class="title">ランダム名言アプリ</h1>
-    <blockquote>
-      <p class="label-en">原文（English）</p>
-      <p id="quoteEn" class="quote-en">読み込み中です...</p>
-      <p class="label-ja">日本語訳</p>
-      <p id="quoteJa" class="quote-ja"></p>
-      <footer>
-        <cite id="author"></cite>
-      </footer>
-    </blockquote>
-    <div class="buttons">
-      <span class="status" id="status"></span>
-      <button id="reloadBtn">新しい名言</button>
-    </div>
-  </main>
-
-  <script>
-    const quoteEnEl = document.getElementById("quoteEn");
-    const quoteJaEl = document.getElementById("quoteJa");
-    const authorEl = document.getElementById("author");
-    const statusEl = document.getElementById("status");
-    const reloadBtn = document.getElementById("reloadBtn");
-
-    async function translateToJapanese(text) {
-      try {
-        // MyMemory API (英文 → 和文)
-        const url =
-          "https://api.mymemory.translated.net/get?q=" +
-          encodeURIComponent(text) +
-          "&langpair=en|ja";
-
-        const res = await fetch(url);
-        const data = await res.json();
-
-        if (!res.ok || !data.responseData) {
-          throw new Error("Translate API error");
-        }
-
-        const jp = data.responseData.translatedText || "翻訳に失敗しました。";
-        quoteJaEl.textContent = jp;
-      } catch (err) {
-        console.error(err);
-        quoteJaEl.textContent =
-          "翻訳に失敗しました。時間をおいて再度お試しください。";
-      }
-    }
-
-    async function fetchQuote() {
-      try {
-        reloadBtn.disabled = true;
-        statusEl.textContent = "英語名言取得中...";
-        quoteJaEl.textContent = "";
-
-        // 英語のランダム名言（DummyJSON）
-        const response = await fetch("https://dummyjson.com/quotes/random");
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error("Quote API error");
-        }
-
-        quoteEnEl.textContent = data.quote;
-        authorEl.textContent = data.author ? "by " + data.author : "";
-
-        // 英文取得できたら日本語訳
-        statusEl.textContent = "日本語に翻訳中...";
-        await translateToJapanese(data.quote);
-        statusEl.textContent = "取得完了";
-      } catch (err) {
-        console.error(err);
-        quoteEnEl.textContent =
-          "名言の取得に失敗しました。時間をおいて再度お試しください。";
-        quoteJaEl.textContent = "";
-        authorEl.textContent = "";
-        statusEl.textContent = "エラー";
-      } finally {
-        reloadBtn.disabled = false;
-      }
-    }
-
-    // 初回表示
-    fetchQuote();
-
-    // ボタンクリック時
-    reloadBtn.addEventListener("click", fetchQuote);
-  </script>
-</body>
-</html>
+ (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
+diff --git a/index.html b/index.html
+index 8452544200dfa8579342f239fdf4ef891d8c1c33..6922b75e99ffa37549fd0de706ab00df0ada0431 100644
+--- a/index.html
++++ b/index.html
+@@ -29,147 +29,246 @@
+       font-weight: 600;
+       color: #333333;
+     }
+     blockquote {
+       margin: 0 0 16px;
+       padding-left: 12px;
+       border-left: 4px solid #0070f3;
+       color: #222222;
+     }
+     .quote-en {
+       margin: 0 0 8px;
+       line-height: 1.6;
+       font-size: 16px;
+     }
+     .quote-ja {
+       margin: 0;
+       line-height: 1.6;
+       font-size: 15px;
+       color: #444444;
+     }
+     blockquote footer {
+       margin-top: 8px;
+       font-size: 14px;
+       color: #666666;
+     }
+-    .buttons {
+-      display: flex;
+-      gap: 8px;
+-      justify-content: flex-end;
+-      align-items: center;
+-      margin-top: 8px;
+-    }
++    .buttons {
++      display: flex;
++      gap: 8px;
++      justify-content: flex-end;
++      align-items: center;
++      margin-top: 8px;
++      flex-wrap: wrap;
++    }
+     button {
+       border: none;
+       border-radius: 4px;
+       padding: 8px 16px;
+       font-size: 14px;
+       cursor: pointer;
+       background: #0070f3;
+       color: #ffffff;
+     }
+     button:disabled {
+       opacity: 0.6;
+       cursor: default;
+     }
+-    .status {
+-      font-size: 12px;
+-      color: #999999;
+-    }
+-    .label-en,
+-    .label-ja {
+-      font-size: 12px;
+-      color: #888888;
+-      margin: 0 0 2px;
+-    }
+-  </style>
+-</head>
+-<body>
++    .status {
++      font-size: 12px;
++      color: #999999;
++      margin-right: auto;
++    }
++    .label-en,
++    .label-ja {
++      font-size: 12px;
++      color: #888888;
++      margin: 0 0 2px;
++    }
++    .saved-section {
++      margin-top: 20px;
++      padding-top: 16px;
++      border-top: 1px solid #e6e6e6;
++    }
++    .saved-title {
++      margin: 0 0 8px;
++      font-size: 14px;
++      color: #333333;
++    }
++    .saved-list {
++      margin: 0;
++      padding-left: 18px;
++      color: #333333;
++      font-size: 14px;
++      line-height: 1.6;
++    }
++    .saved-empty {
++      margin: 0;
++      color: #777777;
++      font-size: 13px;
++    }
++  </style>
++</head>
++<body>
+   <main class="card">
+     <h1 class="title">ランダム名言アプリ</h1>
+     <blockquote>
+       <p class="label-en">原文（English）</p>
+       <p id="quoteEn" class="quote-en">読み込み中です...</p>
+       <p class="label-ja">日本語訳</p>
+       <p id="quoteJa" class="quote-ja"></p>
+       <footer>
+         <cite id="author"></cite>
+       </footer>
+     </blockquote>
+-    <div class="buttons">
+-      <span class="status" id="status"></span>
+-      <button id="reloadBtn">新しい名言</button>
+-    </div>
+-  </main>
++    <div class="buttons">
++      <span class="status" id="status"></span>
++      <button id="saveBtn">この名言を保存</button>
++      <button id="reloadBtn">新しい名言</button>
++    </div>
++    <section class="saved-section">
++      <h2 class="saved-title">保存した名言</h2>
++      <p id="savedEmpty" class="saved-empty">まだ保存されていません。</p>
++      <ol id="savedList" class="saved-list"></ol>
++    </section>
++  </main>
+ 
+   <script>
+     const quoteEnEl = document.getElementById("quoteEn");
+     const quoteJaEl = document.getElementById("quoteJa");
+     const authorEl = document.getElementById("author");
+-    const statusEl = document.getElementById("status");
+-    const reloadBtn = document.getElementById("reloadBtn");
++    const statusEl = document.getElementById("status");
++    const reloadBtn = document.getElementById("reloadBtn");
++    const saveBtn = document.getElementById("saveBtn");
++    const savedListEl = document.getElementById("savedList");
++    const savedEmptyEl = document.getElementById("savedEmpty");
++
++    const SAVED_QUOTES_KEY = "savedQuotes";
++    let currentQuote = null;
++
++    function loadSavedQuotes() {
++      try {
++        const raw = localStorage.getItem(SAVED_QUOTES_KEY);
++        return raw ? JSON.parse(raw) : [];
++      } catch (err) {
++        console.error(err);
++        return [];
++      }
++    }
++
++    function persistSavedQuotes(quotes) {
++      localStorage.setItem(SAVED_QUOTES_KEY, JSON.stringify(quotes));
++    }
++
++    function renderSavedQuotes() {
++      const savedQuotes = loadSavedQuotes();
++      savedListEl.innerHTML = "";
++
++      if (savedQuotes.length === 0) {
++        savedEmptyEl.style.display = "block";
++        return;
++      }
++
++      savedEmptyEl.style.display = "none";
++
++      savedQuotes.forEach((item) => {
++        const li = document.createElement("li");
++        li.textContent = `「${item.quoteJa || item.quoteEn}」 - ${item.author || "Unknown"}`;
++        savedListEl.appendChild(li);
++      });
++    }
++
++    function saveCurrentQuote() {
++      if (!currentQuote || !currentQuote.quoteEn) {
++        statusEl.textContent = "保存できる名言がありません";
++        return;
++      }
++
++      const savedQuotes = loadSavedQuotes();
++      const isDuplicate = savedQuotes.some(
++        (item) => item.quoteEn === currentQuote.quoteEn && item.author === currentQuote.author
++      );
++
++      if (isDuplicate) {
++        statusEl.textContent = "この名言はすでに保存済みです";
++        return;
++      }
++
++      savedQuotes.unshift(currentQuote);
++      persistSavedQuotes(savedQuotes);
++      renderSavedQuotes();
++      statusEl.textContent = "保存しました";
++    }
+ 
+-    async function translateToJapanese(text) {
+-      try {
++    async function translateToJapanese(text) {
++      try {
+         // MyMemory API (英文 → 和文)
+         const url =
+           "https://api.mymemory.translated.net/get?q=" +
+           encodeURIComponent(text) +
+           "&langpair=en|ja";
+ 
+         const res = await fetch(url);
+         const data = await res.json();
+ 
+         if (!res.ok || !data.responseData) {
+           throw new Error("Translate API error");
+         }
+ 
+-        const jp = data.responseData.translatedText || "翻訳に失敗しました。";
+-        quoteJaEl.textContent = jp;
+-      } catch (err) {
+-        console.error(err);
+-        quoteJaEl.textContent =
+-          "翻訳に失敗しました。時間をおいて再度お試しください。";
+-      }
+-    }
++        const jp = data.responseData.translatedText || "翻訳に失敗しました。";
++        quoteJaEl.textContent = jp;
++        return jp;
++      } catch (err) {
++        console.error(err);
++        quoteJaEl.textContent =
++          "翻訳に失敗しました。時間をおいて再度お試しください。";
++        return "";
++      }
++    }
+ 
+     async function fetchQuote() {
+       try {
+         reloadBtn.disabled = true;
+         statusEl.textContent = "英語名言取得中...";
+         quoteJaEl.textContent = "";
+ 
+         // 英語のランダム名言（DummyJSON）
+         const response = await fetch("https://dummyjson.com/quotes/random");
+         const data = await response.json();
+ 
+         if (!response.ok) {
+           throw new Error("Quote API error");
+         }
+ 
+         quoteEnEl.textContent = data.quote;
+         authorEl.textContent = data.author ? "by " + data.author : "";
+ 
+         // 英文取得できたら日本語訳
+         statusEl.textContent = "日本語に翻訳中...";
+-        await translateToJapanese(data.quote);
+-        statusEl.textContent = "取得完了";
++        const quoteJa = await translateToJapanese(data.quote);
++        currentQuote = {
++          quoteEn: data.quote,
++          quoteJa,
++          author: data.author || ""
++        };
++        statusEl.textContent = "取得完了";
+       } catch (err) {
+         console.error(err);
+         quoteEnEl.textContent =
+           "名言の取得に失敗しました。時間をおいて再度お試しください。";
+         quoteJaEl.textContent = "";
+         authorEl.textContent = "";
+         statusEl.textContent = "エラー";
+       } finally {
+         reloadBtn.disabled = false;
+       }
+     }
+ 
+-    // 初回表示
+-    fetchQuote();
+-
+-    // ボタンクリック時
+-    reloadBtn.addEventListener("click", fetchQuote);
+-  </script>
++    // 初回表示
++    renderSavedQuotes();
++    fetchQuote();
++
++    // ボタンクリック時
++    reloadBtn.addEventListener("click", fetchQuote);
++    saveBtn.addEventListener("click", saveCurrentQuote);
++  </script>
+ </body>
+ </html>
+ 
+EOF
+)
